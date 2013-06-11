@@ -1,0 +1,10 @@
+{
+    "es5":          true,
+    "proto":        true,
+    "eqnull":       true,
+    "boss":         true,
+    "laxbreak":     true,
+    "newcap":       false,
+    "shadow":       true,
+    "funcscope":    true
+}
