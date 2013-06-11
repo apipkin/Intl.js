@@ -6,16 +6,22 @@
  * Usage:
  *
  *      node Ldml2Json.js
- *      node Ldml2Json.js [PATH]
+ *      node Ldml2Json.js [OPTIONS]... [PATH]
  *
  * When PATH is specified, it should point to a location containing the
  * extracted core.zip and tools.zip files from the Unicode CLDR
  */
-
 var
     child,
     spawn = require('child_process').spawn,
     fs    = require('fs'),
+
+    // Command-line options
+    program = require('commander')
+        .usage('[options] [cldr-path]')
+        .option('--no-currencies', 'Exclude currency symbols from output')
+        .option('--no-dates',      'Exclude date objects')
+        .parse(process.argv),
 
     // The 'callback' function for the JSONP files
     jsonpFn = 'Intl.__addLocaleData',
@@ -25,7 +31,7 @@ var
     jsonpExp = /"(?!default)([\w$][\w\d$]+)":/g,
 
     // Path to CLDR root
-    cldr = process.argv[2];
+    cldr = program.args[0];
 
     // Paths to required classes in the CLDR /tools/java folder
     jPath = cldr + '/tools/java/',
@@ -128,7 +134,7 @@ function cldrToIntl() {
     locales.forEach(function (dir) {
         var json, obj;
 
-        // The Ldml2JsonConverter tool creats directories even for locales that have
+        // The Ldml2JsonConverter tool creates directories even for locales that have
         // no data that we require
         try {
             json = fs.readFileSync(out + dir + '/data.json');
@@ -143,7 +149,7 @@ function cldrToIntl() {
         copyLocaleData(obj, base);
 
         else if (!obj.identity.territory && !obj.identity.script && !obj.identity.variant)
-        base = obj;
+            base = obj;
 
         // Copy data from the root locale
         copyLocaleData(obj, root);
@@ -244,8 +250,6 @@ function processObj(data) {
 
                 // Symbols
                 symbols: {},
-
-                currencies: {}
             }
         };
 
@@ -274,10 +278,19 @@ function processObj(data) {
     if (ptn = data.numbers['percentFormats-numberSystem-' + defaultNu] || data.numbers['percentFormats-numberSystem-latn'])
         ret.number.patterns.percent = createNumberFormats(ptn.standard.percentFormat.pattern);
 
-    // Copy the currency symbols
-    for (var k in data.numbers.currencies)
-        ret.number.currencies[k] = data.numbers.currencies[k].symbol;
+    if (program.currencies) {
+        ret.number.currencies = {};
 
+        // Copy the currency symbols
+        for (var k in data.numbers.currencies)
+            ret.number.currencies[k] = data.numbers.currencies[k].symbol;
+    }
+
+    // Stop here if we only need numbers
+    if (!program.dates) {
+        delete ret.date;
+        return ret;
+    }
 
     // Copy the formatting information
     gopn(data.dates.calendars).forEach(function (cal) {
