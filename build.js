@@ -17,6 +17,7 @@ var
 
         .option('-r, --rebuild-json', 'Recreate the JSON files, including only the data required by this build.')
         .option('--cldr-path <path>', 'Path to the Unicode CLDR core and tools files used to rebuild data. Implies -r.')
+        .option('--complete',         'Compiles with all locale data built-in, removes Intl.__addLocaleData(). Implies -r.')
 
         // Number specific options
 //      .option('--full-numbers',  'Output data for all numbering systems, including those not normally used by the locale.')
@@ -50,6 +51,9 @@ var
              * CLDR format locale data should be provided using Intl.__addLocaleData().
              */
         }).replace(/^\s+(?!\*)|^function.*\s+|\s+}/gm, '');
+
+if (program.complete)
+    files.push('internal.js');
 
 if (program.cldrPath)
     program.rebuildJson = true;
@@ -103,5 +107,5 @@ function compress () {
     fs.writeFileSync(mapFile, map.toString());
 
     // Now the minified .js file
-    fs.writeFileSync(outFile, out.toString() + '/*\n//@ sourceMappingURL='+mapFile+ '\n*/');
+    fs.writeFileSync(outFile, out.toString() + '/*\n//# sourceMappingURL='+mapFile+ '\n*/');
 }
