@@ -60,7 +60,7 @@ var
             args = arrSlice.call(arguments, 1);
 
         return function () {
-            fn.apply(thisObj, arrConcat.call(args, arrSlice.call(arguments)));
+            return fn.apply(thisObj, arrConcat.call(args, arrSlice.call(arguments)));
         };
     },
 
