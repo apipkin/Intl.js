@@ -840,7 +840,10 @@ function createRegExpRestore () {
     for (var i = 1; i <= 9; i++)
         cap['$'+i] = RegExp['$'+i];
 
-    // Now, iterate over them
+    // Escape any special characters in the lastMatch string
+    lm = lm.replace(esc, '\\$0');
+
+    // Now, iterate over the captured snapshot
     for (var i = 1; i <= 9; i++) {
         var m = cap['$'+i];
 
@@ -848,9 +851,9 @@ function createRegExpRestore () {
         if (!m)
             lm = '()' + lm;
 
-        // Else find the string in lm and escape & wrap it to capture it
+        // Else find the escaped string in lm wrap it to capture it
         else
-            lm = lm.replace(m, '(' + m.replace(esc, '\\$0') + ')');
+            lm = lm.replace(m.replace(esc, '\\$0'), '($0)');
 
         // Push it to the reg and chop lm to make sure further groups come after
         arrPush.call(reg, lm.slice(0, lm.indexOf('(') + 1));
